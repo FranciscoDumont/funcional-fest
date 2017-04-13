@@ -73,3 +73,54 @@ agregarAmigoAlCliente amigoNuevo (Cliente edad nombre resistencia amigos) =	Clie
 --v3
 --agregarAmigoAlCliente:: Cliente->Cliente->Cliente
 --agregarAmigoAlCliente amigoNuevo cliente =	cliente { amigos = (amigoNuevo:amigos) }
+
+{-Punto 5 
+Representar con la abstracción que crea conveniente  
+● a cada una de las bebidas mencionadas  
+● y cómo queda un cliente luego de tomar cualquiera de las bebidas 
+mencionadas.-}
+type Bebida = Cliente->Cliente  
+
+grogXD::Bebida
+grogXD (Cliente edad nombre resistencia amigos) =	Cliente edad nombre 0 amigos
+
+{-listaDeResistencias::[Cliente]->[Int]
+listaDeResistencias amigos = map resistencia amigos
+
+menos10 numero = numero-10 
+
+menos10CadaAmigo :: Cliente->[Int]
+menos10CadaAmigo (Cliente edad nombre resistencia amigos) = map menos10 (listaDeResistencias amigos)
+
+jarraLoca::Bebida
+jarraLoca (Cliente edad nombre resistencia amigos) = Cliente edad nombre (resistencia-10) (map menos10CadaAmigo amigos) 
+-}
+klusener:: String->Bebida
+klusener gusto (Cliente edad nombre resistencia amigos) = Cliente edad nombre (resistencia-(length gusto)) amigos 
+
+tintico :: Bebida
+tintico (Cliente edad nombre resistencia amigos) = Cliente edad nombre (resistencia+5*(length amigos)) amigos
+
+erupto:: Int->String
+erupto fuerza = "e"++(concat (replicate fuerza "r"))++"p"
+
+soda:: Int->Bebida
+soda fuerza (Cliente edad nombre resistencia amigos) = (Cliente edad ((erupto fuerza)++nombre) resistencia amigos)
+
+rescatarse :: Int->Bebida
+rescatarse horas (Cliente edad nombre resistencia amigos) 
+    | horas>3 = Cliente edad nombre (resistencia+200) amigos
+	| horas>0 = Cliente edad nombre (resistencia+100) amigos
+	| otherwise = (Cliente edad nombre resistencia amigos)
+
+{-Punto 6 
+Hacer que un cliente pueda rescatarse.-}
+
+-- rescatarse 4 rodri 
+
+{-Punto 7 
+Escribir la ​ consulta en la consola ​  que permita realizar el siguiente itinerario con Ana: 
+tomarse una jarra loca, un klusener de chocolate, rescatarse 2 horas y luego tomar 
+un klusener de huevo.-}
+
+-- ((klusener "huevo").(rescatarse 2).(klusener "chocolate").(jarraLoca)) ana
