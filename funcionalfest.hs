@@ -63,16 +63,16 @@ restricciones definidas por el negocio (no agregar más de una vez al mismo amig
 ni agregarse a sí mismo como amigo, basándose en que dos clientes son iguales si 
 tienen el mismo nombre). -}
 
---agregarAmigoAlCliente :: Cliente->Cliente->Cliente
---agregarAmigoAlCliente nuevo actual =((: nuevo). amigos )actual -- se puede hacer point free
+nombreDeAmigos :: Cliente->[String]
+nombreDeAmigos cliente = (map nombre (amigos cliente))  
 
---v2
+puedenSerAmigos:: Cliente->Cliente->Bool
+puedenSerAmigos amigoNuevo cliente = ((elem (nombre amigoNuevo) (nombreDeAmigos cliente)) == False)&&((nombre amigoNuevo) /= (nombre cliente) )  
+
 agregarAmigoAlCliente:: Cliente->Cliente->Cliente
-agregarAmigoAlCliente amigoNuevo (Cliente edad nombre resistencia amigos) =	Cliente edad nombre resistencia (amigoNuevo:amigos)
-
---v3
---agregarAmigoAlCliente:: Cliente->Cliente->Cliente
---agregarAmigoAlCliente amigoNuevo cliente =	cliente { amigos = (amigoNuevo:amigos) }
+agregarAmigoAlCliente amigoNuevo cliente
+	| (puedenSerAmigos amigoNuevo cliente) = Cliente (edad cliente) (nombre cliente) (resistencia cliente) (amigoNuevo:(amigos cliente))
+	| otherwise = cliente --no tira error, devuelve al cliente igual
 
 {-Punto 5 
 Representar con la abstracción que crea conveniente  
@@ -82,19 +82,17 @@ mencionadas.-}
 type Bebida = Cliente->Cliente  
 
 grogXD::Bebida
-grogXD (Cliente edad nombre resistencia amigos) =	Cliente edad nombre 0 amigos
+grogXD (Cliente edad nombre resistencia amigos) = Cliente edad nombre 0 amigos
 
-{-listaDeResistencias::[Cliente]->[Int]
+listaDeResistencias::[Cliente]->[Int]
 listaDeResistencias amigos = map resistencia amigos
 
-menos10 numero = numero-10 
-
-menos10CadaAmigo :: Cliente->[Int]
-menos10CadaAmigo (Cliente edad nombre resistencia amigos) = map menos10 (listaDeResistencias amigos)
+menos10Resistencia :: Cliente->Cliente
+menos10Resistencia (Cliente edad nombre resistencia amigos) = Cliente edad nombre (resistencia-10) amigos
 
 jarraLoca::Bebida
-jarraLoca (Cliente edad nombre resistencia amigos) = Cliente edad nombre (resistencia-10) (map menos10CadaAmigo amigos) 
--}
+jarraLoca (Cliente edad nombre resistencia amigos) = Cliente edad nombre (resistencia-10) (map menos10Resistencia amigos) 
+
 klusener:: String->Bebida
 klusener gusto (Cliente edad nombre resistencia amigos) = Cliente edad nombre (resistencia-(length gusto)) amigos 
 
@@ -116,11 +114,26 @@ rescatarse horas (Cliente edad nombre resistencia amigos)
 {-Punto 6 
 Hacer que un cliente pueda rescatarse.-}
 
--- rescatarse 4 rodri 
-
 {-Punto 7 
 Escribir la ​ consulta en la consola ​  que permita realizar el siguiente itinerario con Ana: 
 tomarse una jarra loca, un klusener de chocolate, rescatarse 2 horas y luego tomar 
 un klusener de huevo.-}
 
 -- ((klusener "huevo").(rescatarse 2).(klusener "chocolate").(jarraLoca)) ana
+
+{-Casos de prueba 
+
+Punto 3 Bien
+
+Punto 4 
+● Intentar agregar a Rodri como amigo de Rodri. ¿Qué debe pasar? 
+● Hacer que Marcos reconozca a Rodri como amigo (que ya lo conoce). ¿Qué 
+debe pasar? 
+● Hacer que Rodri reconozca a Marcos como amigo. Debe arrancar con 0 
+amigos y luego agregarlo a Rodri como único amigo. 
+ 
+Punto 5 Bien
+ 
+Punto 6 Bien
+
+Punto 7 Bien -}
