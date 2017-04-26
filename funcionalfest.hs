@@ -1,24 +1,41 @@
+import Text.Show.Functions
 {-Punto 1 
-Modelar el tipo de dato cliente. Justificar el criterio utilizado. -}
-data Cliente = Cliente {edad :: Int,nombre :: String,resistencia :: Int,amigos :: [Cliente]} deriving Show
-{-Punto 2 
-● Modelar a Rodri, que tiene 55 de resistencia y no considera a nadie como 
-amigo.  
-● También modelar a Marcos, un cliente que tiene resistencia 40 y considera a 
-Rodri como su único amigo. 
-● Tenemos a Cristian, un cliente cuya resistencia es 2, y no considera a nadie 
-como amigo. 
-● Por último está Ana, una cliente que tiene 120 de resistencia y considera a 
-Marcos y a Rodri como amigos. -}
-rodri = Cliente {edad= 20,amigos=[],nombre = "Rodri",resistencia = 55}
-marcos = Cliente {edad=30,amigos = [rodri],resistencia =40,nombre = "Marcos"} 
-cristian = Cliente {edad=40,amigos=[],resistencia= 2,nombre="Cristian"}
-ana = Cliente {edad=35,amigos=[rodri,marcos],resistencia=120,nombre="Ana"}
-{-Punto 3 
-Desarrollar la función ​ comoEsta​  que dice cómo está un cliente 
-● Si su resistencia es mayor a 50, está “fresco” 
-● Si no está “fresco”, pero tiene más de un amigo, está “piola” 
-● En caso contrario, está “duro”-}
+De los clientes, además del nombre, resistencia y sus amigos, se desea saber qué 
+bebidas tomó.
+a) Hacer las modificaciones en la abstracción cliente y considerar 
+i)Que Rodri tomó un tintico 
+ii)Que Marcos tomó un Klusener de guinda 
+iii)Que Ana no tomó nada 
+iv)Que Cristian tomó un grog XD y una jarraLoca 
+
+b) Hacer que un cliente pueda tomar una bebida. Además del efecto que le 
+causa la bebida en sí, se debe registrar esa bebida en su historial de bebidas 
+tomadas.  
+ 
+c) Desarrollar la función ​ tomarTragos​ , la cual recibe a un cliente y una lista de 
+tragos y retorna al cliente luego de tomarlos todos los tragos.  
+ 
+d) Hacer la función ​ dameOtro​ , que hace que un cliente vuelva a tomarse el 
+último trago que se tomó. -}
+
+data Cliente = Cliente {edad::Int, nombre::String, resistencia::Int, amigos::[Cliente], bebidas::[Bebida]} deriving Show
+
+rodri = Cliente {edad= 20,amigos=[],nombre = "Rodri",resistencia = 55,bebidas=[tintico] }
+marcos = Cliente {edad=30,amigos = [rodri],resistencia =40,nombre = "Marcos",bebidas=[klusener "guinda"] } 
+cristian = Cliente {edad=40,amigos=[],resistencia= 2,nombre="Cristian",bebidas=[grogXD,jarraLoca]}
+ana = Cliente {edad=35,amigos=[rodri,marcos],resistencia=120,nombre="Ana",bebidas=[]}
+
+agregarBebidaACliente::Bebida->Cliente->Cliente
+agregarBebidaACliente bebida cliente =cliente{bebidas= bebida:(bebidas cliente)} 
+
+tomarBebida::Cliente->Bebida->Cliente
+tomarBebida cliente bebida= bebida (cliente)
+
+tomarTragos::Cliente->[Bebida]->Cliente
+tomarTragos cliente tragos = foldl tomarBebida cliente tragos
+
+dameOtro::Cliente->Cliente
+dameOtro cliente = (last.bebidas) cliente $ cliente
 
 comoEsta :: Cliente->String
 comoEsta cliente 
@@ -26,25 +43,8 @@ comoEsta cliente
      | ((>1).length.amigos) cliente ="piola"
      | otherwise ="duro"
 
-{-Punto 4   
-Hacer que un cliente reconozca como amigo a otro cliente, respetando las 
-restricciones definidas por el negocio (no agregar más de una vez al mismo amigo 
-ni agregarse a sí mismo como amigo, basándose en que dos clientes son iguales si 
-tienen el mismo nombre). -}
-
-{-
-
-puedenSerAmigos:: Cliente->Cliente->Bool
-puedenSerAmigos amigoNuevo cliente = ((not.elem (nombre amigoNuevo) (nombreDeAmigos cliente))&&((nombre amigoNuevo) /= (nombre cliente) )  
-
-agregarAmigoAlCliente:: Cliente->Cliente->Cliente
-agregarAmigoAlCliente amigoNuevo cliente
-	| (puedenSerAmigos amigoNuevo cliente) = Cliente (edad cliente) (nombre cliente) (resistencia cliente) (amigoNuevo:(amigos cliente))
-	| otherwise = cliente --no tira error, devuelve al cliente igual
--}
-
 agregarAListaAmigos::Cliente->Cliente->Cliente
-agregarAListaAmigos amigoNuevo cliente = Cliente (edad cliente) (nombre cliente) (resistencia cliente) (amigoNuevo:(amigos cliente))
+agregarAListaAmigos amigoNuevo cliente = Cliente (edad cliente) (nombre cliente) (resistencia cliente) (amigoNuevo:(amigos cliente)) (bebidas cliente)
 
 nombreDeAmigos :: Cliente->[String]
 nombreDeAmigos cliente = (map nombre (amigos cliente))  
@@ -64,25 +64,19 @@ agregarAmigoAlCliente amigoNuevo cliente
      | otherwise = cliente
 
 
-
-{-Punto 5 
-Representar con la abstracción que crea conveniente  
-● a cada una de las bebidas mencionadas  
-● y cómo queda un cliente luego de tomar cualquiera de las bebidas 
-mencionadas.-}
-type Bebida = Cliente->Cliente  
+type Bebida = Cliente->Cliente
 
 modificarResistencia:: Int->Cliente->Cliente
-modificarResistencia cantidad (Cliente edad nombre resistencia amigos) = Cliente edad nombre (resistencia+cantidad) amigos
+modificarResistencia cantidad (Cliente edad nombre resistencia amigos bebidas) = Cliente edad nombre (resistencia+cantidad) amigos bebidas
 
 grogXD::Bebida
-grogXD (Cliente edad nombre resistencia amigos) = Cliente edad nombre 0 amigos
+grogXD cliente = cliente{resistencia = 0}
 
 listaDeResistencias::[Cliente]->[Int]
 listaDeResistencias amigos = map resistencia amigos
 
 menos10ResistenciaAmigos::Cliente->Cliente
-menos10ResistenciaAmigos (Cliente edad nombre resistencia amigos) = Cliente edad nombre resistencia (map (modificarResistencia (-10)) amigos) 
+menos10ResistenciaAmigos (Cliente edad nombre resistencia amigos bebidas) = Cliente edad nombre resistencia (map (modificarResistencia (-10)) amigos) bebidas 
 
 jarraLoca::Bebida
 jarraLoca cliente = (modificarResistencia (-10).menos10ResistenciaAmigos) cliente
@@ -97,37 +91,10 @@ erupto:: Int->String
 erupto fuerza = "e"++(replicate fuerza 'r')++"p"
 
 soda:: Int->Bebida
-soda fuerza (Cliente edad nombre resistencia amigos) = (Cliente edad ((erupto fuerza)++nombre) resistencia amigos)
+soda fuerza (Cliente edad nombre resistencia amigos bebidas) = (Cliente edad ((erupto fuerza)++nombre) resistencia amigos bebidas)
 
 rescatarse :: Int->Bebida
 rescatarse horas cliente 
      | horas>3 = modificarResistencia 200 cliente
      | horas>0 = modificarResistencia 100 cliente
      | otherwise = cliente
-
-{-Punto 6 
-Hacer que un cliente pueda rescatarse.-}
-
-{-Punto 7 
-Escribir la ​ consulta en la consola ​  que permita realizar el siguiente itinerario con Ana: 
-tomarse una jarra loca, un klusener de chocolate, rescatarse 2 horas y luego tomar 
-un klusener de huevo.-}
-
--- ((klusener "huevo").(rescatarse 2).(klusener "chocolate").(jarraLoca)) ana
-
-{-Casos de prueba 
-
-Punto 3 Bien
-
-Punto 4 
-● Intentar agregar a Rodri como amigo de Rodri. ¿Qué debe pasar? 
-● Hacer que Marcos reconozca a Rodri como amigo (que ya lo conoce). ¿Qué 
-debe pasar? 
-● Hacer que Rodri reconozca a Marcos como amigo. Debe arrancar con 0 
-amigos y luego agregarlo a Rodri como único amigo. 
- 
-Punto 5 Bien
- 
-Punto 6 Bien
-
-Punto 7 Bien -}
